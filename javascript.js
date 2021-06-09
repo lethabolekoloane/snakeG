@@ -270,12 +270,47 @@ class Food extends Snake {
     }
 }
 
+// Splash effect when eating food.
+class Particle {
+
+
+    draw() {
+        let hsl = this.color
+            .split("")
+            .filter((l) => l.match(/[^hsl()$% ]/g))
+            .join("")
+            .split(",")
+            .map((n) => +n);
+        let [r, g, b] = _helpers.hsl2rgb(hsl[0], hsl[1] / 100, hsl[2] / 100);
+        ctx.globalCompositeOperation = "lighter";
+        ctx.fillStyle = `rgb(${r},${g},${b},${1})`;
+        ctx.fillRect(this.x, this.y, this.size, this.size);
+        ctx.globalCompositeOperation = "source-over";
+    }
+    update() {
+        this.draw();
+        this.size -= 0.3;
+        this.ttl += 0.5;
+        this.y += this.vel.y;
+        this.x += this.vel.x;
+        this.vel.y += this.gravity;
+    }
+}
+
 // Updates score
 function scoreManager() {
     let currentScore = _vars.snakeLength - 1;
     score.innerText = currentScore.toString();
 }
-
+/* Important function, it cleans up the splash particles
+when their size reach or go below zero. */
+function cleanMem() {
+    for (let i = 0; i < _vars.particles.length; i++) {
+        if (_vars.particles[i].size <= 0) {
+            _vars.particles.splice(i, 1);
+        }
+    }
+}
 /* Instantiate particles, the amount can be set in particleCount variable. */
 function particleSplash() {
     for (let i = 0; i < _vars.particleCount; i++) {
@@ -353,7 +388,7 @@ function gameOver() {
         (_vars.maxScore = _vars.snakeLength - 1) :
         null;
     window.localStorage.setItem("maxScore", _vars.maxScore);
-    ctx.fillStyle = "#4cffd7";
+    ctx.fillStyle = "black";
     ctx.textAlign = "center";
     ctx.font = "bold 30px Poppins, sans-serif";
     ctx.fillText("GAME OVER", ctx.canvas.width / 2, ctx.canvas.height / 2);
